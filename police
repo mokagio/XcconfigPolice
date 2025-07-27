@@ -6,26 +6,41 @@ import Foundation
 import XcodeProj  // @tuist ~> 8.8.0
 import PathKit
 
+/// Slims `XCBuildConfiguration` to our domain
+struct BuildConfiguration {
+    let name: String
+    let hasBuildSettings: Bool
+}
+
+extension BuildConfiguration {
+
+    init(with xcBuildConfiguration: XCBuildConfiguration) {
+        self.init(
+            name: xcBuildConfiguration.name,
+            hasBuildSettings: xcBuildConfiguration.buildSettings.isEmpty == false
+        )
+    }
+}
+
 guard CommandLine.arguments.count == 2 else {
-  let arg0 = Path(CommandLine.arguments[0]).lastComponent
-  fputs("usage: \(arg0) <project>\n", stderr)
-  exit(1)
+    let arg0 = Path(CommandLine.arguments[0]).lastComponent
+    fputs("usage: \(arg0) <project>\n", stderr)
+    exit(1)
 }
 
 let projectPath = Path(CommandLine.arguments[1])
 let xcodeproj = try XcodeProj(path: projectPath)
 
-let buildConfigurations = xcodeproj.pbxproj.buildConfigurations.reduce([XCBuildConfiguration]()) { acc, buildConfiguration in
-  guard buildConfiguration.buildSettings.isEmpty == false else {
-    return acc
-  }
-
-  return acc + [buildConfiguration]
-}
+let buildConfigurations = xcodeproj
+    .pbxproj
+    .buildConfigurations
+    .map(BuildConfiguration.init(with:))
+    .filter { $0.hasBuildSettings }
 
 guard buildConfigurations.isEmpty else {
   buildConfigurations.forEach { buildConfiguration in
-    fputs("Build configuration '\(buildConfiguration.name)' has \(buildConfiguration.buildSettings.count) build settings. No good.\n", stderr)
+      // TODO: Restore the could
+      fputs("Build configuration '\(buildConfiguration.name)' has build settings tracked in the Xcode project.\n", stderr)
   }
   exit(1)
 }
