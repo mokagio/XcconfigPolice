@@ -1,0 +1,31 @@
+#!/usr/bin/swift sh
+
+// See example from
+// https://github.com/tuist/XcodeProj/blob/da98243ad87eddbb2324d9cc28a60fd57875bb55/README.md
+import Foundation
+import XcodeProj  // @tuist ~> 8.8.0
+import PathKit
+
+guard CommandLine.arguments.count == 2 else {
+  let arg0 = Path(CommandLine.arguments[0]).lastComponent
+  fputs("usage: \(arg0) <project>\n", stderr)
+  exit(1)
+}
+
+let projectPath = Path(CommandLine.arguments[1])
+let xcodeproj = try XcodeProj(path: projectPath)
+
+let buildConfigurations = xcodeproj.pbxproj.buildConfigurations.reduce([XCBuildConfiguration]()) { acc, buildConfiguration in
+  guard buildConfiguration.buildSettings.isEmpty == false else {
+    return acc
+  }
+
+  return acc + [buildConfiguration]
+}
+
+guard buildConfigurations.isEmpty else {
+  buildConfigurations.forEach { buildConfiguration in
+    fputs("Build configuration '\(buildConfiguration.name)' has \(buildConfiguration.buildSettings.count) build settings. No good.\n", stderr)
+  }
+  exit(1)
+}
