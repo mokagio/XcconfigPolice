@@ -9,7 +9,9 @@ import PathKit
 /// Slims `XCBuildConfiguration` to our domain
 struct BuildConfiguration {
     let name: String
-    let hasBuildSettings: Bool
+    let buildSettings: BuildSettings
+
+    var hasBuildSettings: Bool { buildSettings.isEmpty == false }
 }
 
 extension BuildConfiguration {
@@ -17,7 +19,7 @@ extension BuildConfiguration {
     init(with xcBuildConfiguration: XCBuildConfiguration) {
         self.init(
             name: xcBuildConfiguration.name,
-            hasBuildSettings: xcBuildConfiguration.buildSettings.isEmpty == false
+            buildSettings: xcBuildConfiguration.buildSettings
         )
     }
 }
